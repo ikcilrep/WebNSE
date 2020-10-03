@@ -1,10 +1,13 @@
 mod vectors;
 
+use crate::blocks::generation::vectors::are_orthogonal;
+use crate::blocks::generation::vectors::vector_difference;
 use crate::blocks::BlockSize;
 use hkdf::Hkdf;
 use num_bigint::BigUint;
-use sha2::Sha256;
 use rand::rngs::OsRng;
+use rand::RngCore;
+use sha2::Sha256;
 
 pub const Primes: [u16; 256] = [
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
@@ -33,14 +36,31 @@ pub fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BlockSize]
     }
 }
 
-pub fn generate_iv(derived_key: &[u16; BlockSize], block: &[i8; BlockSize], iv: &mut [i8; BlockSize]) {
+pub fn generate_iv(
+    derived_key: &[u16; BlockSize],
+    block: &[i8; BlockSize],
+    iv: &mut [i8; BlockSize],
+) {
+    let mut unsigned_iv = [0; BlockSize];
+    let mut difference = [0; BlockSize];
+    while {
+        OsRng.fill_bytes(&mut unsigned_iv);
+
+        for i in 0..BlockSize {
+            iv[i] = unsigned_iv[i] as i8;
+        }
+
+        vector_difference(block, iv, &mut difference);
+
+        are_orthogonal(derived_key, &difference)
+    } {}
 }
 
 #[cfg(test)]
 mod tests {
+    use super::*;
     use crate::blocks::generation::vectors::are_orthogonal;
-use crate::blocks::generation::vectors::vector_difference;
-use super::*;
+    use crate::blocks::generation::vectors::vector_difference;
     use crate::blocks::SaltSize;
 
     #[test]
@@ -65,12 +85,11 @@ use super::*;
         use rand::{thread_rng, RngCore};
         let mut rng = thread_rng();
 
-        let derived_key = [0; BlockSize];
+        let derived_key = [1; BlockSize];
 
         let mut unsigned_block = [0; BlockSize];
         rng.fill_bytes(&mut unsigned_block);
-
-        let mut block = [0; BlockSize]; 
+        let mut block = [0; BlockSize];
         for i in 0..BlockSize {
             block[i] = unsigned_block[i] as i8;
         }
