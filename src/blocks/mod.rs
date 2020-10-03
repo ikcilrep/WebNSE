@@ -41,7 +41,7 @@ fn encrypt_block(
         sum2 += derived_key[i] as i64 * (block[i] - iv[i]) as i64;
     }
 
-    for i in (SaltSize + BlockSize..EncryptedBlockSize).step_by(ElementSize) {
+    for i in (0..EncryptedBlockSize-SaltSize-BlockSize).step_by(ElementSize) {
         let mut e = block[i] as i64 * sum1 - (derived_key[i]as i64*sum2<<1);
         for j in i..=i+5 {
             encrypted_block[j] = (e & 255) as u8; 
