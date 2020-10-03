@@ -14,7 +14,7 @@ const ElementSize: usize = 5;
 const EncryptedBlockSize: usize = ElementSize * BlockSize + BlockSize + SaltSize;
 
 fn encrypt_block(
-    block: &[u8; BlockSize],
+    block: &[i8; BlockSize],
     key: &BigUint,
     encrypted_block: &mut [u8; EncryptedBlockSize],
 ) {
@@ -23,7 +23,7 @@ fn encrypt_block(
 fn decrypt_block(
     encrypted_block: &[u8; EncryptedBlockSize],
     key: &BigUint,
-    decrypted_block: &mut [u8; BlockSize],
+    decrypted_block: &mut [i8; BlockSize],
 ) {
 }
 
@@ -44,8 +44,13 @@ mod tests {
         use rand::{thread_rng, RngCore};
 
         let mut rng = thread_rng();
+        let mut unsigned_block = [0; BlockSize];
+        rng.fill_bytes(&mut unsigned_block);
         let mut block = [0; BlockSize];
-        rng.fill_bytes(&mut block);
+
+        for i in 0..BlockSize {
+            block[i] = unsigned_block[i] as i8;
+        }
 
         let key = rng.gen_biguint(128);
 
@@ -61,5 +66,4 @@ mod tests {
             assert_eq!(e1, e2);
         }
     }
-
 }
