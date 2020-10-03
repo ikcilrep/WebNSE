@@ -3,7 +3,7 @@ use std::ops::Sub;
 
 fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
     if (vector1.iter().count() != vector2.iter().count()) {
-        panic!("vectors have different sizes");
+        panic!("vectors are of different size");
     }
     vector1
         .iter()
@@ -15,7 +15,6 @@ fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::blocks::SaltSize;
 
     #[test]
     fn are_orthogonal_returns_true_when_orthogonal() {
