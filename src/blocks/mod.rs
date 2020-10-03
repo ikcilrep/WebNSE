@@ -1,5 +1,7 @@
 mod generation;
 
+use crate::blocks::generation::derive_key;
+use crate::blocks::generation::generate_iv;
 use hkdf::Hkdf;
 use num_bigint::BigUint;
 use rand::rngs::OsRng;
@@ -18,6 +20,34 @@ fn encrypt_block(
     key: &BigUint,
     encrypted_block: &mut [u8; EncryptedBlockSize],
 ) {
+    let salt = &mut encrypted_block[0..SaltSize];
+    OsRng.fill_bytes(salt);
+
+    let mut derived_key = [0; BlockSize];
+    derive_key(key, &salt, &mut derived_key);
+
+    let mut iv = [0; BlockSize];
+    generate_iv(&derived_key, block, &mut iv);
+
+    for i in SaltSize..SaltSize + BlockSize {
+        encrypted_block[i] = iv[i] as u8;
+    }
+
+    let mut sum1 = 0;
+    let mut sum2 = 0;
+
+    for i in 0..BlockSize {
+        sum1 += derived_key[i] as i64 * derived_key[i] as i64;
+        sum2 += derived_key[i] as i64 * (block[i] - iv[i]) as i64;
+    }
+
+    for i in (SaltSize + BlockSize..EncryptedBlockSize).step_by(ElementSize) {
+        let mut e = block[i] as i64 * sum1 - (derived_key[i]as i64*sum2<<1);
+        for j in i..=i+5 {
+            encrypted_block[j] = (e & 255) as u8; 
+            e >>= 8;
+        }
+    }
 }
 
 fn decrypt_block(
