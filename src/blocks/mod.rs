@@ -62,20 +62,4 @@ mod tests {
         }
     }
 
-    #[test]
-    fn derive_key_fills_output_with_primes() {
-        use num_bigint::RandBigInt;
-        use rand::{thread_rng, RngCore};
-        let mut rng = thread_rng();
-
-        let key = rng.gen_biguint(128);
-        let mut salt = [0; SaltSize];
-        rng.fill_bytes(&mut salt);
-
-        let mut derived_key = [0; BlockSize];
-        derive_key(&key, &salt, &mut derived_key);
-        for e in derived_key.iter() {
-            assert_eq!(Primes.iter().any(|p| p == e), true);
-        }
-    }
 }
