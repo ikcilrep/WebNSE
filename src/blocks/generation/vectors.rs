@@ -2,7 +2,7 @@ use crate::blocks::BlockSize;
 use std::ops::Sub;
 
 fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
-    if (vector1.iter().count() != vector2.iter().count()) {
+    if vector1.iter().count() != vector2.iter().count() {
         panic!("vectors are of different size");
     }
     vector1
