@@ -13,6 +13,17 @@ fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
 }
 
 fn vector_difference(vector1: &[i8], vector2: &[i8], output: &mut [i16]) {
+    let vector_size = vector1.iter().count();
+    if vector_size != vector2.iter().count() {
+        panic!("vectors are of different size");
+    }
+    if vector_size != output.iter().count() {
+        panic!("output is of different size than vectors");
+    }
+
+    for i in 0..vector_size {
+        output[i] = vector1[i] as i16 - vector2[i] as i16;
+    }
 }
 
 #[cfg(test)]
@@ -57,7 +68,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected = "difference is of different size than vectors")]
+    #[should_panic(expected = "output is of different size than vectors")]
     fn vector_difference_panics_when_difference_is_of_different_size_than_vectors() {
         let mut difference = [0; 3];
         vector_difference(&[2, -123, 43, 12], &[5, 124, -128, 1], &mut difference);
