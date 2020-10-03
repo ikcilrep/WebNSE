@@ -12,6 +12,9 @@ fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
         == 0
 }
 
+fn vector_difference(vector1: &[i8], vector2: &[i8], output: &mut [i16]) {
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -32,5 +35,31 @@ mod tests {
     #[should_panic]
     fn are_orthogonal_panics_when_vectors_are_different_size() {
         are_orthogonal(&[2, 3, 7], &[14, 23, 54, 12]);
+    }
+
+    #[test]
+    fn vector_difference_returns_vector_difference() {
+        let mut difference1 = [0; 3];
+        vector_difference(&[2, -123, 43], &[5, 124, -128], &mut difference1);
+        assert_eq!(difference1, [-3, -247, 171]);
+
+        let mut difference2 = [0; 4];
+        vector_difference(&[85, 92, -32, -76], &[-19, 12, 65, 43], &mut difference2);
+
+        assert_eq!(difference2, [104, 80, -97, -119]);
+    }
+
+    #[test]
+    #[should_panic(expected = "vectors are of different size")]
+    fn vector_difference_panics_when_vectors_are_of_different_size() {
+        let mut difference = [0; 3];
+        vector_difference(&[2, -123, 43], &[5, 124, -128, 1], &mut difference);
+    }
+
+    #[test]
+    #[should_panic(expected = "difference is of different size than vectors")]
+    fn vector_difference_panics_when_difference_is_of_different_size_than_vectors() {
+        let mut difference = [0; 3];
+        vector_difference(&[2, -123, 43, 12], &[5, 124, -128, 1], &mut difference);
     }
 }
