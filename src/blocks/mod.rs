@@ -1,4 +1,5 @@
 use hkdf::Hkdf;
+use sha2::{Sha256};
 use num_bigint::BigUint;
 use rand::rngs::OsRng;
 use rand::RngCore;
@@ -28,7 +29,14 @@ const Primes: [u16; 256] = [
     1619,
 ];
 
-fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BlockSize]) {}
+fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BlockSize]) {
+    let hkdf = Hkdf::<Sha256>::new(Some(salt), &key.to_bytes_be());
+    let mut okm = [0; BlockSize];
+    hkdf.expand(&[], &mut okm).unwrap();
+    for i in 0..BlockSize {
+        derived_key[i] = Primes[okm[i] as usize];
+    } 
+}
 
 fn encrypt_block(
     block: &[u8; BlockSize],
@@ -43,6 +51,7 @@ fn decrypt_block(
     decrypted_block: &mut [u8; BlockSize],
 ) {
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
