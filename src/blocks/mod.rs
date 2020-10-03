@@ -1,7 +1,5 @@
 use num_bigint::{BigUint};
 
-mod encryptedBlock;
-
 const BlockSize: usize = 256;
 const SaltSize: usize = 16;
 
@@ -28,13 +26,11 @@ mod tests {
     #[test]
     fn encrypt_block_can_be_reversed() {
         use num_bigint::RandBigInt;
-        use rand::{thread_rng, Rng};
+        use rand::{thread_rng, RngCore};
 
         let mut rng = thread_rng();
         let mut block = [0; BlockSize];
-        for i in 0..BlockSize {
-            block[i] = rng.gen::<u8>();
-        }
+        rng.fill_bytes(&mut block);
 
         let key = thread_rng().gen_biguint(128);
 
