@@ -1,8 +1,8 @@
 use crate::blocks::BlockSize;
 use crate::blocks::ElementSize;
 
-pub fn join_bytes(bytes: &[u8; ElementSize * BlockSize], data: &mut [i64; BlockSize]) {
-    for i in (0..ElementSize * BlockSize).step_by(ElementSize) {
+pub fn join_bytes(bytes: &[u8], data: &mut [i64]) {
+    for i in (0..bytes.iter().count()).step_by(ElementSize) {
         let mut element = 0;
         for j in (i..i + ElementSize).rev() {
             element <<= 8;
