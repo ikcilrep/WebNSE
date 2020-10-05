@@ -1,12 +1,13 @@
+mod bytes;
 mod generation;
 
+use crate::blocks::bytes::join_bytes;
+use crate::blocks::bytes::split_bytes;
 use crate::blocks::generation::derive_key;
 use crate::blocks::generation::generate_iv;
-use hkdf::Hkdf;
 use num_bigint::BigUint;
 use rand::rngs::OsRng;
 use rand::RngCore;
-use sha2::Sha256;
 
 const BlockSize: usize = 256;
 const SaltSize: usize = 16;
@@ -28,9 +29,8 @@ fn encrypt_block(
 
     let mut iv = [0; BlockSize];
     generate_iv(&derived_key, block, &mut iv);
-
     for i in SaltSize..SaltSize + BlockSize {
-        encrypted_block[i] = iv[i] as u8;
+        encrypted_block[i] = iv[i - SaltSize] as u8;
     }
 
     let mut sum1 = 0;
@@ -38,16 +38,23 @@ fn encrypt_block(
 
     for i in 0..BlockSize {
         sum1 += derived_key[i] as i64 * derived_key[i] as i64;
-        sum2 += derived_key[i] as i64 * (block[i] - iv[i]) as i64;
+        sum2 += derived_key[i] as i64 * (block[i] as i64 - iv[i] as i64);
     }
 
-    for i in (0..EncryptedBlockSize-SaltSize-BlockSize).step_by(ElementSize) {
-        let mut e = block[i] as i64 * sum1 - (derived_key[i]as i64*sum2<<1);
-        for j in i..=i+5 {
-            encrypted_block[j] = (e & 255) as u8; 
+    for i in (0..EncryptedBlockSize - SaltSize - BlockSize).step_by(ElementSize) {
+        let mut e = (block[i / ElementSize] as i64 * sum1
+            - (derived_key[i / ElementSize] as i64 * sum2 << 1)) as u64;
+        for j in i..i + ElementSize {
+            let index = j + SaltSize + BlockSize;
+            encrypted_block[index] = (e & 255) as u8;
             e >>= 8;
         }
     }
+    let mut encrypted_block_iter = block
+        .iter()
+        .zip(derived_key.iter())
+        .map(|(&r, &p)| r as i64 * sum1 - (p as i64 * sum2 << 1));
+    split_bytes(&mut encrypted_block_iter, encrypted_block);
 }
 
 fn decrypt_block(
@@ -55,13 +62,44 @@ fn decrypt_block(
     key: &BigUint,
     decrypted_block: &mut [i8; BlockSize],
 ) {
+    let salt = &encrypted_block[0..SaltSize];
+
+    let mut derived_key = [0; BlockSize];
+    derive_key(key, &salt, &mut derived_key);
+
+    let unsigned_iv = &encrypted_block[SaltSize..SaltSize + BlockSize];
+    let mut iv = [0; BlockSize];
+    for i in 0..BlockSize {
+        iv[i] = unsigned_iv[i] as i8;
+    }
+
+    let mut signed_encrypted_block: [i64; BlockSize] = [0; BlockSize];
+
+    for i in (BlockSize + SaltSize..EncryptedBlockSize).step_by(ElementSize) {
+        let mut element = 0;
+        for j in (i..i + ElementSize).rev() {
+            element <<= 8;
+            element += encrypted_block[j] as u64;
+        }
+
+        let index = (i - BlockSize - SaltSize) / ElementSize;
+        signed_encrypted_block[index] = element as i64;
+    }
+
+    let mut sum1 = 0;
+    let mut sum2 = 0;
+    let mut sum3 = 0;
+
+    for i in 0..BlockSize {
+        sum1 += derived_key[i] as i64 * iv[i] as i64;
+        sum2 += derived_key[i] as i64 * derived_key[i] as i64;
+        sum3 += derived_key[i] as i64 * signed_encrypted_block[i] as i64;
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::blocks::generation::derive_key;
-    use crate::blocks::generation::Primes;
 
     #[test]
     fn encryptedBlockSize_is_1552() {
@@ -96,4 +134,5 @@ mod tests {
             assert_eq!(e1, e2);
         }
     }
+
 }
