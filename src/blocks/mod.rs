@@ -40,21 +40,16 @@ fn encrypt_block(
         sum1 += derived_key[i] as i64 * derived_key[i] as i64;
         sum2 += derived_key[i] as i64 * (block[i] as i64 - iv[i] as i64);
     }
+    sum2 <<= 1; 
 
-    for i in (0..EncryptedBlockSize - SaltSize - BlockSize).step_by(ElementSize) {
-        let mut e = (block[i / ElementSize] as i64 * sum1
-            - (derived_key[i / ElementSize] as i64 * sum2 << 1)) as u64;
-        for j in i..i + ElementSize {
-            let index = j + SaltSize + BlockSize;
-            encrypted_block[index] = (e & 255) as u8;
-            e >>= 8;
-        }
-    }
     let mut encrypted_block_iter = block
         .iter()
         .zip(derived_key.iter())
-        .map(|(&r, &p)| r as i64 * sum1 - (p as i64 * sum2 << 1));
-    split_bytes(&mut encrypted_block_iter, encrypted_block);
+        .map(|(&r, &p)| r as i64 * sum1 - (p as i64 * sum2));
+    split_bytes(
+        &mut encrypted_block_iter,
+        &mut encrypted_block[SaltSize + BlockSize..EncryptedBlockSize],
+    );
 }
 
 fn decrypt_block(
@@ -73,18 +68,12 @@ fn decrypt_block(
         iv[i] = unsigned_iv[i] as i8;
     }
 
-    let mut signed_encrypted_block: [i64; BlockSize] = [0; BlockSize];
+    let mut joined_encrypted_block: [i64; BlockSize] = [0; BlockSize];
 
-    for i in (BlockSize + SaltSize..EncryptedBlockSize).step_by(ElementSize) {
-        let mut element = 0;
-        for j in (i..i + ElementSize).rev() {
-            element <<= 8;
-            element += encrypted_block[j] as u64;
-        }
-
-        let index = (i - BlockSize - SaltSize) / ElementSize;
-        signed_encrypted_block[index] = element as i64;
-    }
+    join_bytes(
+        &encrypted_block[BlockSize + SaltSize..EncryptedBlockSize],
+        &mut joined_encrypted_block,
+    );
 
     let mut sum1 = 0;
     let mut sum2 = 0;
@@ -93,7 +82,18 @@ fn decrypt_block(
     for i in 0..BlockSize {
         sum1 += derived_key[i] as i64 * iv[i] as i64;
         sum2 += derived_key[i] as i64 * derived_key[i] as i64;
-        sum3 += derived_key[i] as i64 * signed_encrypted_block[i] as i64;
+        sum3 += derived_key[i] as i64 * joined_encrypted_block[i] as i64;
+    }
+
+    sum1 <<= 1;
+    sum3 <<= 1;
+
+    for i in 0..BlockSize {
+        let a = joined_encrypted_block[i] + derived_key[i] as i64 * sum1;
+        let b = (derived_key[i] as i64 * (sum3 / sum2))
+            + ((derived_key[i] as i64 * (sum3 % sum2)) / sum2);
+        let c = (a - b) / sum2;
+        decrypted_block[i] = c as i8;
     }
 }
 
@@ -134,5 +134,4 @@ mod tests {
             assert_eq!(e1, e2);
         }
     }
-
 }
