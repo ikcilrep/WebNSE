@@ -36,11 +36,7 @@ pub fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BlockSize]
     }
 }
 
-pub fn generate_iv(
-    derived_key: &[u16; BlockSize],
-    block: &[i8; BlockSize],
-    iv: &mut [i8; BlockSize],
-) {
+pub fn generate_iv(derived_key: &[u16; BlockSize], block: &[i8], iv: &mut [i8; BlockSize]) {
     let mut unsigned_iv = [0; BlockSize];
     let mut difference = [0; BlockSize];
     while {
@@ -89,13 +85,13 @@ mod tests {
 
         let mut unsigned_block = [0; BlockSize];
         rng.fill_bytes(&mut unsigned_block);
-        let mut block = [0; BlockSize];
+        let mut block = Vec::new();
         for i in 0..BlockSize {
-            block[i] = unsigned_block[i] as i8;
+            block.push(unsigned_block[i] as i8);
         }
 
         let mut iv = [0; BlockSize];
-        generate_iv(&derived_key, &block, &mut iv);
+        generate_iv(&derived_key, &block.to_vec(), &mut iv);
 
         let mut difference = [0; BlockSize];
         vector_difference(&block, &iv, &mut difference);

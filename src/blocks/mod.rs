@@ -16,11 +16,7 @@ const ElementSize: usize = 5;
 
 const EncryptedBlockSize: usize = ElementSize * BlockSize + BlockSize + SaltSize;
 
-fn encrypt_block(
-    block: &[i8; BlockSize],
-    key: &BigUint,
-    encrypted_block: &mut [u8; EncryptedBlockSize],
-) {
+fn encrypt_block(block: &[i8], key: &BigUint, encrypted_block: &mut [u8; EncryptedBlockSize]) {
     let salt = &mut encrypted_block[0..SaltSize];
     OsRng.fill_bytes(salt);
 
@@ -28,7 +24,7 @@ fn encrypt_block(
     derive_key(key, &salt, &mut derived_key);
 
     let mut iv = [0; BlockSize];
-    generate_iv(&derived_key, block, &mut iv);
+    generate_iv(&derived_key, &block.to_vec(), &mut iv);
     for i in SaltSize..SaltSize + BlockSize {
         encrypted_block[i] = iv[i - SaltSize] as u8;
     }
@@ -40,7 +36,7 @@ fn encrypt_block(
         sum1 += derived_key[i] as i64 * derived_key[i] as i64;
         sum2 += derived_key[i] as i64 * (block[i] as i64 - iv[i] as i64);
     }
-    sum2 <<= 1; 
+    sum2 <<= 1;
 
     let mut encrypted_block_iter = block
         .iter()
@@ -52,11 +48,7 @@ fn encrypt_block(
     );
 }
 
-fn decrypt_block(
-    encrypted_block: &[u8; EncryptedBlockSize],
-    key: &BigUint,
-    decrypted_block: &mut [i8; BlockSize],
-) {
+fn decrypt_block(encrypted_block: &[u8], key: &BigUint, decrypted_block: &mut [i8; BlockSize]) {
     let salt = &encrypted_block[0..SaltSize];
 
     let mut derived_key = [0; BlockSize];
@@ -114,10 +106,10 @@ mod tests {
         let mut rng = thread_rng();
         let mut unsigned_block = [0; BlockSize];
         rng.fill_bytes(&mut unsigned_block);
-        let mut block = [0; BlockSize];
+        let mut block = Vec::new();
 
         for i in 0..BlockSize {
-            block[i] = unsigned_block[i] as i8;
+            block.push(unsigned_block[i] as i8);
         }
 
         let key = rng.gen_biguint(128);
@@ -128,7 +120,7 @@ mod tests {
 
         let mut decrypted_block = [1; BlockSize];
 
-        decrypt_block(&encrypted_block, &key, &mut decrypted_block);
+        decrypt_block(&encrypted_block.to_vec(), &key, &mut decrypted_block);
 
         for (e1, e2) in block.iter().zip(decrypted_block.iter()) {
             assert_eq!(e1, e2);
