@@ -1,5 +1,5 @@
 pub fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
-    if vector1.iter().count() != vector2.iter().count() {
+    if vector1.len() != vector2.len() {
         panic!("vectors are of different size");
     }
     vector1
@@ -10,11 +10,11 @@ pub fn are_orthogonal(vector1: &[u16], vector2: &[i16]) -> bool {
 }
 
 pub fn vector_difference(vector1: &[i8], vector2: &[i8], output: &mut [i16]) {
-    let vector_size = vector1.iter().count();
-    if vector_size != vector2.iter().count() {
+    let vector_size = vector1.len();
+    if vector_size != vector2.len() {
         panic!("vectors are of different size");
     }
-    if vector_size != output.iter().count() {
+    if vector_size != output.len() {
         panic!("output is of different size than vectors");
     }
 
