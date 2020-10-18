@@ -84,7 +84,7 @@ pub fn cycle_right(data: &Uint8Array, bits_to_shift: &BigUint, cycled_data: &mut
 fn cycle_left_can_be_reversed_with_cycle_right() {
     use std::str::FromStr;
     let bits_to_shift = BigUint::from_str("110192826829776194000614388426091705128").unwrap();
-    let mut unsigned_data = [
+    let unsigned_data = [
         237, 252, 84, 64, 120, 86, 39, 29, 40, 209, 77, 44, 108, 122, 150, 132, 46, 92, 98, 25,
         173, 186, 243, 142, 77, 145, 76, 71, 245, 118, 52, 172, 221, 109, 180, 222, 235, 18, 182,
         237, 67, 240, 184, 164, 150, 90, 193, 97, 89, 74, 204, 205, 185, 255, 80, 49, 97, 172, 213,

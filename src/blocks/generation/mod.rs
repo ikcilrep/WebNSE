@@ -2,14 +2,14 @@ mod vectors;
 
 use crate::blocks::generation::vectors::are_orthogonal;
 use crate::blocks::generation::vectors::vector_difference;
-use crate::blocks::BlockSize;
+use crate::blocks::BLOCK_SIZE;
 use hkdf::Hkdf;
 use num_bigint::BigUint;
 use rand::rngs::OsRng;
 use rand::RngCore;
 use sha2::Sha256;
 
-pub const Primes: [u16; 256] = [
+pub const PRIMES: [u16; 256] = [
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
     101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193,
     197, 199, 211, 223, 227, 229, 233, 239, 241, 251, 257, 263, 269, 271, 277, 281, 283, 293, 307,
@@ -27,22 +27,22 @@ pub const Primes: [u16; 256] = [
     1619,
 ];
 
-pub fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BlockSize]) {
+pub fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BLOCK_SIZE]) {
     let hkdf = Hkdf::<Sha256>::new(Some(salt), &key.to_bytes_be());
-    let mut okm = [0; BlockSize];
+    let mut okm = [0; BLOCK_SIZE];
     hkdf.expand(&[], &mut okm).unwrap();
-    for i in 0..BlockSize {
-        derived_key[i] = Primes[okm[i] as usize];
+    for i in 0..BLOCK_SIZE {
+        derived_key[i] = PRIMES[okm[i] as usize];
     }
 }
 
-pub fn generate_iv(derived_key: &[u16; BlockSize], block: &[i8], iv: &mut [i8; BlockSize]) {
-    let mut unsigned_iv = [0; BlockSize];
-    let mut difference = [0; BlockSize];
+pub fn generate_iv(derived_key: &[u16; BLOCK_SIZE], block: &[i8], iv: &mut [i8; BLOCK_SIZE]) {
+    let mut unsigned_iv = [0; BLOCK_SIZE];
+    let mut difference = [0; BLOCK_SIZE];
     while {
         OsRng.fill_bytes(&mut unsigned_iv);
 
-        for i in 0..BlockSize {
+        for i in 0..BLOCK_SIZE {
             iv[i] = unsigned_iv[i] as i8;
         }
 
@@ -57,7 +57,7 @@ mod tests {
     use super::*;
     use crate::blocks::generation::vectors::are_orthogonal;
     use crate::blocks::generation::vectors::vector_difference;
-    use crate::blocks::SaltSize;
+    use crate::blocks::SALT_SIZE;
 
     #[test]
     fn derive_key_fills_output_with_primes() {
@@ -66,13 +66,13 @@ mod tests {
         let mut rng = thread_rng();
 
         let key = rng.gen_biguint(128);
-        let mut salt = [0; SaltSize];
+        let mut salt = [0; SALT_SIZE];
         rng.fill_bytes(&mut salt);
 
-        let mut derived_key = [0; BlockSize];
+        let mut derived_key = [0; BLOCK_SIZE];
         derive_key(&key, &salt, &mut derived_key);
         for e in derived_key.iter() {
-            assert_eq!(Primes.iter().any(|p| p == e), true);
+            assert_eq!(PRIMES.iter().any(|p| p == e), true);
         }
     }
 
@@ -81,19 +81,19 @@ mod tests {
         use rand::{thread_rng, RngCore};
         let mut rng = thread_rng();
 
-        let derived_key = [1; BlockSize];
+        let derived_key = [1; BLOCK_SIZE];
 
-        let mut unsigned_block = [0; BlockSize];
+        let mut unsigned_block = [0; BLOCK_SIZE];
         rng.fill_bytes(&mut unsigned_block);
         let mut block = Vec::new();
-        for i in 0..BlockSize {
+        for i in 0..BLOCK_SIZE {
             block.push(unsigned_block[i] as i8);
         }
 
-        let mut iv = [0; BlockSize];
+        let mut iv = [0; BLOCK_SIZE];
         generate_iv(&derived_key, &block.to_vec(), &mut iv);
 
-        let mut difference = [0; BlockSize];
+        let mut difference = [0; BLOCK_SIZE];
         vector_difference(&block, &iv, &mut difference);
 
         assert!(!are_orthogonal(&derived_key, &difference));

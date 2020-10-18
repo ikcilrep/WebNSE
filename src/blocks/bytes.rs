@@ -1,8 +1,7 @@
-use crate::blocks::BlockSize;
-use crate::blocks::ElementSize;
+use crate::blocks::ELEMENT_SIZE;
 
 fn u40_as_i40(u40: u64) -> i64 {
-    let half = 1 << (8 * ElementSize - 1);
+    let half = 1 << (8 * ELEMENT_SIZE - 1);
     if u40 < half {
         u40 as i64
     } else {
@@ -11,7 +10,7 @@ fn u40_as_i40(u40: u64) -> i64 {
 }
 
 fn i40_as_u40(i40: i64) -> u64 {
-    let half = 1 << (8 * ElementSize - 1);
+    let half = 1 << (8 * ELEMENT_SIZE - 1);
     if i40 < 0 {
         (i40 + 2 * half) as u64
     } else {
@@ -20,14 +19,14 @@ fn i40_as_u40(i40: i64) -> u64 {
 }
 
 pub fn join_bytes(bytes: &[u8], data: &mut [i64]) {
-    for i in (0..bytes.iter().count()).step_by(ElementSize) {
+    for i in (0..bytes.iter().count()).step_by(ELEMENT_SIZE) {
         let mut element = 0;
-        for j in (i..i + ElementSize).rev() {
+        for j in (i..i + ELEMENT_SIZE).rev() {
             element <<= 8;
             element += bytes[j] as u64;
         }
 
-        let index = i / ElementSize;
+        let index = i / ELEMENT_SIZE;
         data[index] = u40_as_i40(element);
     }
 }
@@ -36,10 +35,10 @@ pub fn split_bytes<I>(data: &mut I, bytes: &mut [u8])
 where
     I: Iterator<Item = i64>,
 {
-    for i in (0..bytes.iter().count()).step_by(ElementSize) {
+    for i in (0..bytes.iter().count()).step_by(ELEMENT_SIZE) {
         let mut e = i40_as_u40(data.next().unwrap());
 
-        for j in i..i + ElementSize {
+        for j in i..i + ELEMENT_SIZE {
             bytes[j] = (e & 255) as u8;
             e >>= 8;
         }
@@ -52,13 +51,15 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::blocks::ELEMENT_SIZE;
+    use crate::blocks::BLOCK_SIZE;
 
     #[test]
     fn join_bytes_can_be_reversed() {
-        let data: [i64; BlockSize] = [274877906943; BlockSize];
-        let mut bytes = [0; BlockSize * ElementSize];
+        let data: [i64; BLOCK_SIZE] = [274877906943; BLOCK_SIZE];
+        let mut bytes = [0; BLOCK_SIZE * ELEMENT_SIZE];
         split_bytes(&mut data.iter().map(|&x| x as i64), &mut bytes);
-        let mut joined_bytes = [0; BlockSize];
+        let mut joined_bytes = [0; BLOCK_SIZE];
         join_bytes(&bytes, &mut joined_bytes);
     }
 
