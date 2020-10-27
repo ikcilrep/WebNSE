@@ -9,7 +9,7 @@ use num_bigint::BigUint;
 use rand::rngs::OsRng;
 use rand::RngCore;
 
-const BLOCK_SIZE: usize = 256;
+pub const BLOCK_SIZE: usize = 256;
 const SALT_SIZE: usize = 16;
 
 const ELEMENT_SIZE: usize = 5;
