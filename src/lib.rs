@@ -31,6 +31,7 @@ fn encrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
     let mut padded_data =
         vec![0; data.length() as usize + 2 * BLOCK_SIZE - data.length() as usize % BLOCK_SIZE];
 
+
     for i in 0..data.length() {
         padded_data[i as usize] = data.get_index(i);
     }
@@ -41,6 +42,10 @@ fn encrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
         padded_data[i as usize + data.length() as usize] = padding_bytes.get_index(i);
     }
 
+    let last_index = padded_data.len() - 1;
+
+    padded_data[last_index] = BLOCK_SIZE as u8 - (data.length() as usize % BLOCK_SIZE) as u8;
+ 
     let bits_to_shift = hash_number(key);
     let mut cycled_data = vec![0; data.length() as usize];
 
