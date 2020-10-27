@@ -14,7 +14,7 @@ const SALT_SIZE: usize = 16;
 
 const ELEMENT_SIZE: usize = 5;
 
-const ENCRYPTED_BLOCK_SIZE: usize = ELEMENT_SIZE * BLOCK_SIZE + BLOCK_SIZE + SALT_SIZE;
+pub const ENCRYPTED_BLOCK_SIZE: usize = ELEMENT_SIZE * BLOCK_SIZE + BLOCK_SIZE + SALT_SIZE;
 
 fn encrypt_block(block: &[i8], key: &BigUint, encrypted_block: &mut [u8; ENCRYPTED_BLOCK_SIZE]) {
     let salt = &mut encrypted_block[0..SALT_SIZE];
