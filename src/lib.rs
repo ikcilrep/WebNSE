@@ -27,7 +27,7 @@ fn hash_number(number: &BigUint) -> BigUint {
     return BigUint::from_bytes_be(&output);
 }
 
-fn encrypt(data: &Uint8Array, key: &BigUint) -> Uint8Array {
+fn encrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
     let mut padded_data =
         vec![0; data.length() as usize + 2 * BLOCK_SIZE - data.length() as usize % BLOCK_SIZE];
 
@@ -44,7 +44,7 @@ fn encrypt(data: &Uint8Array, key: &BigUint) -> Uint8Array {
     let bits_to_shift = hash_number(key);
     let mut cycled_data = vec![0; data.length() as usize];
 
-    cycle_right(data, &bits_to_shift, &mut cycled_data);
+    cycle_right(&data, &bits_to_shift, &mut cycled_data);
 
     let result = Uint8Array::new_with_length(ENCRYPTED_BLOCK_SIZE as u32);
 
@@ -58,6 +58,6 @@ fn encrypt(data: &Uint8Array, key: &BigUint) -> Uint8Array {
     return result;
 }
 
-fn decrypt(data: &Uint8Array, key: &BigUint) -> Uint8Array {
+fn decrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
     return Uint8Array::new_with_length(data.length() as u32);
 }

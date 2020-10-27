@@ -91,9 +91,9 @@ fn encrypt_can_be_reversed_with_decrypt() {
     }
 
     let key = BigUint::from_str("110192826829776194000614388426091705128").unwrap();
-    let encrypted_data = encrypt(&data, &key);
+    let encrypted_data = encrypt(data, &key);
 
-    let decrypted_data = decrypt(&encrypted_data, &key);
+    let decrypted_data = decrypt(encrypted_data, &key);
 
     for (r, d) in raw_data.iter().zip(decrypted_data.to_vec().iter()) {
         assert_eq!(r, d);
