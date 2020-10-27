@@ -1,13 +1,18 @@
 mod vectors;
 
+use js_sys::Uint8Array;
 use crate::blocks::generation::vectors::are_orthogonal;
 use crate::blocks::generation::vectors::vector_difference;
 use crate::blocks::BLOCK_SIZE;
 use hkdf::Hkdf;
 use num_bigint::BigUint;
-use rand::rngs::OsRng;
-use rand::RngCore;
 use sha2::Sha256;
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[wasm_bindgen(module = "crypto")]
+extern "C" {
+    fn randomBytes(size: u32) -> Uint8Array;
+}
 
 pub const PRIMES: [u16; 256] = [
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97,
@@ -37,13 +42,13 @@ pub fn derive_key(key: &BigUint, salt: &[u8], derived_key: &mut [u16; BLOCK_SIZE
 }
 
 pub fn generate_iv(derived_key: &[u16; BLOCK_SIZE], block: &[i8], iv: &mut [i8; BLOCK_SIZE]) {
-    let mut unsigned_iv = [0; BLOCK_SIZE];
+    let mut unsigned_iv;
     let mut difference = [0; BLOCK_SIZE];
     while {
-        OsRng.fill_bytes(&mut unsigned_iv);
+        unsigned_iv = randomBytes(BLOCK_SIZE as u32);
 
         for i in 0..BLOCK_SIZE {
-            iv[i] = unsigned_iv[i] as i8;
+            iv[i] = unsigned_iv.get_index(i as u32) as i8;
         }
 
         vector_difference(block, iv, &mut difference);
