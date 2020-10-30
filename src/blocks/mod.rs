@@ -59,22 +59,32 @@ pub fn encrypt_block(block: &[i8], key: &BigUint, encrypted_block: &Uint8Array) 
     );
 }
 
-fn decrypt_block(encrypted_block: &[u8], key: &BigUint, decrypted_block: &mut [i8; BLOCK_SIZE]) {
-    let salt = &encrypted_block[0..SALT_SIZE];
+fn decrypt_block(
+    encrypted_block: &Uint8Array,
+    key: &BigUint,
+    decrypted_block: &mut [i8; BLOCK_SIZE],
+) {
+    let salt = encrypted_block.subarray(0, SALT_SIZE as u32);
 
     let mut derived_key = [0; BLOCK_SIZE];
-    derive_key(key, &salt, &mut derived_key);
+    derive_key(key, &salt.to_vec(), &mut derived_key);
 
-    let unsigned_iv = &encrypted_block[SALT_SIZE..SALT_SIZE + BLOCK_SIZE];
+    let unsigned_iv =
+        encrypted_block.subarray(SALT_SIZE as u32, SALT_SIZE as u32 + BLOCK_SIZE as u32);
     let mut iv = [0; BLOCK_SIZE];
     for i in 0..BLOCK_SIZE {
-        iv[i] = unsigned_iv[i] as i8;
+        iv[i] = unsigned_iv.get_index(i as u32) as i8;
     }
 
     let mut joined_encrypted_block: [i64; BLOCK_SIZE] = [0; BLOCK_SIZE];
 
     join_bytes(
-        &encrypted_block[BLOCK_SIZE + SALT_SIZE..ENCRYPTED_BLOCK_SIZE],
+        &encrypted_block
+            .subarray(
+                BLOCK_SIZE as u32 + SALT_SIZE as u32,
+                ENCRYPTED_BLOCK_SIZE as u32,
+            )
+            .to_vec(),
         &mut joined_encrypted_block,
     );
 
@@ -134,7 +144,7 @@ pub fn encrypt_block_can_be_reversed() {
 
     let mut decrypted_block = [1; BLOCK_SIZE];
 
-    decrypt_block(&encrypted_block.to_vec(), &key, &mut decrypted_block);
+    decrypt_block(&encrypted_block, &key, &mut decrypted_block);
 
     for (e1, e2) in block.iter().zip(decrypted_block.iter()) {
         assert_eq!(e1, e2);
