@@ -1,3 +1,5 @@
+use super::*;
+use crate::blocks::BLOCK_SIZE;
 use crate::blocks::ELEMENT_SIZE;
 use js_sys::Uint8Array;
 
@@ -49,31 +51,19 @@ where
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::blocks::BLOCK_SIZE;
-    use crate::blocks::ELEMENT_SIZE;
+#[wasm_bindgen_test]
+pub fn join_bytes_can_be_reversed() {
+    let data: [i64; BLOCK_SIZE] = [274877906943; BLOCK_SIZE];
+    let mut bytes = Uint8Array::new_with_length(BLOCK_SIZE as u32 * ELEMENT_SIZE as u32);
+    split_bytes(&mut data.iter().map(|&x| x as i64), &mut bytes);
+    let mut joined_bytes = [0; BLOCK_SIZE];
+    join_bytes(&bytes.to_vec(), &mut joined_bytes);
+}
 
-    #[test]
-    fn join_bytes_can_be_reversed() {
-        let data: [i64; BLOCK_SIZE] = [274877906943; BLOCK_SIZE];
-        let mut bytes = Uint8Array::new_with_length(BLOCK_SIZE as u32 * ELEMENT_SIZE as u32);
-        split_bytes(&mut data.iter().map(|&x| x as i64), &mut bytes);
-        let mut joined_bytes = [0; BLOCK_SIZE];
-        join_bytes(&bytes.to_vec(), &mut joined_bytes);
-    }
+#[wasm_bindgen_test]
+pub fn u40_as_i40_can_be_reversed() {
+    let u40 = 560608505551;
+    let i40 = u40_as_i40(u40);
 
-    #[test]
-    fn u40_as_i40_can_be_reversed() {
-        use rand::thread_rng;
-        use rand::Rng;
-
-        let mut rng = thread_rng();
-
-        let u40 = rng.gen_range(0, 1 << 40);
-        let i40 = u40_as_i40(u40);
-
-        assert_eq!(u40, i40_as_u40(i40));
-    }
+    assert_eq!(u40, i40_as_u40(i40));
 }
