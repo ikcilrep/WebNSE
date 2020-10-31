@@ -59,10 +59,10 @@ pub fn encrypt_block(block: &[i8], key: &BigUint, encrypted_block: &Uint8Array) 
     );
 }
 
-fn decrypt_block(
+pub fn decrypt_block(
     encrypted_block: &Uint8Array,
     key: &BigUint,
-    decrypted_block: &mut [i8; BLOCK_SIZE],
+    decrypted_block: &mut [i8],
 ) {
     let salt = encrypted_block.subarray(0, SALT_SIZE as u32);
 

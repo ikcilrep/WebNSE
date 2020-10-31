@@ -1,4 +1,3 @@
-use js_sys::Uint8Array;
 use num_bigint::BigUint;
 use num_traits::ToPrimitive;
 use wasm_bindgen_test::*;
@@ -40,40 +39,40 @@ fn exchange_bits_right(a: u8, b: u8, bits_to_exchange: usize) -> i8 {
     ((a << (8 - bits_to_exchange)) | (b >> bits_to_exchange)) as i8
 }
 
-pub fn cycle_right(data: &Uint8Array, bits_to_shift: &BigUint, cycled_data: &mut Vec<i8>) {
-    let l1 = bits_to_shift % (8u64 * data.length() as u64);
+pub fn cycle_right(data: &[u8], bits_to_shift: &BigUint, cycled_data: &mut Vec<i8>) {
+    let l1 = bits_to_shift % (8u64 * data.len() as u64);
     let l2 = (&l1 % 8usize).to_usize().unwrap();
-    let l3 = (l1 / 8usize).to_u32().unwrap();
+    let l3 = (l1 / 8usize).to_usize().unwrap();
 
     if l2 == 0 {
         for k in 0..l3 {
-            cycled_data.push(data.get_index(data.length() + k - l3) as i8);
+            cycled_data.push(data[data.len() + k - l3] as i8);
         }
 
-        cycled_data.push(data.get_index(0) as i8);
+        cycled_data.push(data[0] as i8);
 
-        for k in l3 + 1..data.length() {
-            cycled_data.push(data.get_index(k - l3) as i8);
+        for k in l3 + 1..data.len() {
+            cycled_data.push(data[k - l3] as i8);
         }
     } else {
         for k in 0..l3 {
             cycled_data.push(exchange_bits_right(
-                data.get_index(data.length() + k - l3 - 1),
-                data.get_index(data.length() + k - l3),
+                data[data.len() + k - l3 - 1],
+                data[data.len() + k - l3],
                 l2,
             ));
         }
 
         cycled_data.push(exchange_bits_right(
-            data.get_index(data.length() - 1),
-            data.get_index(0),
+            data[data.len() - 1],
+            data[0],
             l2,
         ));
 
-        for k in l3 + 1..data.length() {
+        for k in l3 + 1..data.len() {
             cycled_data.push(exchange_bits_right(
-                data.get_index(k - l3 - 1),
-                data.get_index(k - l3),
+                data[k - l3 - 1],
+                data[k - l3],
                 l2,
             ));
         }
@@ -169,13 +168,8 @@ fn cycle_left_can_be_reversed_with_cycle_right() {
     let mut cycled_left_data = Vec::new();
     cycle_left(&data, &bits_to_shift, &mut cycled_left_data);
 
-    let cycled_left_data_js = Uint8Array::new_with_length(cycled_left_data.len() as u32);
-    for i in 0..cycled_left_data.len() {
-        cycled_left_data_js.set_index(i as u32, cycled_left_data[i]);
-    }
-
     let mut uncycled_data = Vec::new();
-    cycle_right(&cycled_left_data_js, &bits_to_shift, &mut uncycled_data);
+    cycle_right(&cycled_left_data, &bits_to_shift, &mut uncycled_data);
 
     for (d, u) in data.iter().zip(uncycled_data.iter()) {
         assert_eq!(d, u);
@@ -263,14 +257,8 @@ fn cycle_right_can_be_reversed_with_cycle_left() {
         208, 236, 97, 19, 24, 220, 0, 208, 19,
     ];
 
-    let data = Uint8Array::new_with_length(raw_data.len() as u32);
-
-    for i in 0..raw_data.len() {
-        data.set_index(i as u32, raw_data[i]);
-    }
-
     let mut cycled_right_data = Vec::new();
-    cycle_right(&data, &bits_to_shift, &mut cycled_right_data);
+    cycle_right(&raw_data, &bits_to_shift, &mut cycled_right_data);
 
     let mut uncycled_data = Vec::new();
     cycle_left(&cycled_right_data, &bits_to_shift, &mut uncycled_data);
