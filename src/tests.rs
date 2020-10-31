@@ -1,12 +1,10 @@
 use crate::decrypt;
 use crate::encrypt;
 use js_sys::Uint8Array;
-use num_bigint::BigUint;
 use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
 fn encrypt_can_be_reversed_with_decrypt() {
-    use std::str::FromStr;
     let raw_data = [
         237, 252, 84, 64, 120, 86, 39, 29, 40, 209, 77, 44, 108, 122, 150, 132, 46, 92, 98, 25,
         173, 186, 243, 142, 77, 145, 76, 71, 245, 118, 52, 172, 221, 109, 180, 222, 235, 18, 182,
@@ -90,10 +88,23 @@ fn encrypt_can_be_reversed_with_decrypt() {
         data.set_index(i as u32, raw_data[i]);
     }
 
-    let key = BigUint::from_str("110192826829776194000614388426091705128").unwrap();
-    let encrypted_data = encrypt(data, &key);
+    let raw_key_bytes = [
+        82, 230, 93, 209, 242, 227, 249, 139, 141, 51, 42, 181, 56, 142, 179, 40,
+    ];
+    let key_bytes1 = Uint8Array::new_with_length(raw_key_bytes.len() as u32);
 
-    let decrypted_data = decrypt(encrypted_data, &key);
+    for i in 0..key_bytes1.length() {
+        key_bytes1.set_index(i, raw_key_bytes[i as usize]);
+    }
+    let key_bytes2 = Uint8Array::new_with_length(raw_key_bytes.len() as u32);
+
+    for i in 0..key_bytes2.length() {
+        key_bytes2.set_index(i, raw_key_bytes[i as usize]);
+    }
+
+    let encrypted_data = encrypt(data, key_bytes1);
+
+    let decrypted_data = decrypt(encrypted_data, key_bytes2);
 
     for (r, d) in raw_data.iter().zip(decrypted_data.to_vec().iter()) {
         assert_eq!(r, d);

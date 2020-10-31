@@ -27,7 +27,9 @@ fn hash_number(number: &BigUint) -> BigUint {
     return BigUint::from_bytes_be(&output);
 }
 
-fn encrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
+#[wasm_bindgen]
+pub fn encrypt(data: Uint8Array, key_bytes: Uint8Array) -> Uint8Array {
+    let key = &BigUint::from_bytes_be(&key_bytes.to_vec());
     let bytes_to_pad = (BLOCK_SIZE - (data.length() as usize % BLOCK_SIZE)) % BLOCK_SIZE;
     let mut padded_data = vec![0; data.length() as usize + BLOCK_SIZE + bytes_to_pad];
 
@@ -66,7 +68,9 @@ fn encrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
     return result;
 }
 
-fn decrypt(encrypted_data: Uint8Array, key: &BigUint) -> Uint8Array {
+#[wasm_bindgen]
+pub fn decrypt(encrypted_data: Uint8Array, key_bytes: Uint8Array) -> Uint8Array {
+    let key = &BigUint::from_bytes_be(&key_bytes.to_vec());
     let mut cycled_data =
         vec![0; encrypted_data.length() as usize / ENCRYPTED_BLOCK_SIZE * BLOCK_SIZE];
     for i in (0..encrypted_data.length()).step_by(ENCRYPTED_BLOCK_SIZE) {
