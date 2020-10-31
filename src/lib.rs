@@ -53,13 +53,13 @@ fn encrypt(data: Uint8Array, key: &BigUint) -> Uint8Array {
     );
 
     for i in (0..padded_data.len()).step_by(BLOCK_SIZE) {
+        let encrypted_block_start = i as u32 / BLOCK_SIZE as u32 * ENCRYPTED_BLOCK_SIZE as u32;
         encrypt_block(
             &cycled_data[i..i + BLOCK_SIZE],
             key,
             &result.subarray(
-                i as u32 / BLOCK_SIZE as u32 * ENCRYPTED_BLOCK_SIZE as u32,
-                i as u32 / BLOCK_SIZE as u32 * ENCRYPTED_BLOCK_SIZE as u32
-                    + ENCRYPTED_BLOCK_SIZE as u32,
+                encrypted_block_start,
+                encrypted_block_start + ENCRYPTED_BLOCK_SIZE as u32,
             ),
         );
     }
@@ -70,11 +70,11 @@ fn decrypt(encrypted_data: Uint8Array, key: &BigUint) -> Uint8Array {
     let mut cycled_data =
         vec![0; encrypted_data.length() as usize / ENCRYPTED_BLOCK_SIZE * BLOCK_SIZE];
     for i in (0..encrypted_data.length()).step_by(ENCRYPTED_BLOCK_SIZE) {
+        let decrypted_block_start = i as usize / ENCRYPTED_BLOCK_SIZE * BLOCK_SIZE;
         decrypt_block(
             &encrypted_data.subarray(i, i + ENCRYPTED_BLOCK_SIZE as u32),
             key,
-            &mut cycled_data[i as usize / ENCRYPTED_BLOCK_SIZE * BLOCK_SIZE
-                ..i as usize / ENCRYPTED_BLOCK_SIZE * BLOCK_SIZE + BLOCK_SIZE],
+            &mut cycled_data[decrypted_block_start..decrypted_block_start + BLOCK_SIZE],
         );
     }
 
