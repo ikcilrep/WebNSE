@@ -10,9 +10,10 @@ use sha2::Sha256;
 use wasm_bindgen::prelude::wasm_bindgen;
 use wasm_bindgen_test::*;
 
-#[wasm_bindgen(module = "crypto")]
+#[wasm_bindgen]
 extern "C" {
-    fn randomBytes(size: u32) -> Uint8Array;
+    #[wasm_bindgen(js_namespace = ["window", "crypto"])]
+    fn getRandomValues(typedArray: Uint8Array) -> Uint8Array;
 }
 
 pub const PRIMES: [u16; 256] = [
@@ -46,7 +47,7 @@ pub fn generate_iv(derived_key: &[u16; BLOCK_SIZE], block: &[i8], iv: &mut [i8; 
     let mut unsigned_iv;
     let mut difference = [0; BLOCK_SIZE];
     while {
-        unsigned_iv = randomBytes(BLOCK_SIZE as u32);
+        unsigned_iv = getRandomValues(Uint8Array::new_with_length(BLOCK_SIZE as u32));
 
         for i in 0..BLOCK_SIZE {
             iv[i] = unsigned_iv.get_index(i as u32) as i8;
@@ -60,6 +61,7 @@ pub fn generate_iv(derived_key: &[u16; BLOCK_SIZE], block: &[i8], iv: &mut [i8; 
 
 #[wasm_bindgen_test]
 pub fn generate_iv_derived_key_is_not_orthogonal_with_block_and_key_difference() {
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     let derived_key = [1; BLOCK_SIZE];
 
     let unsigned_block: [u8; BLOCK_SIZE] = [

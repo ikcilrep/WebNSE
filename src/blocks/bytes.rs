@@ -53,6 +53,7 @@ where
 
 #[wasm_bindgen_test]
 pub fn join_bytes_can_be_reversed() {
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     let data: [i64; BLOCK_SIZE] = [274877906943; BLOCK_SIZE];
     let mut bytes = Uint8Array::new_with_length(BLOCK_SIZE as u32 * ELEMENT_SIZE as u32);
     split_bytes(&mut data.iter().map(|&x| x as i64), &mut bytes);
@@ -62,6 +63,7 @@ pub fn join_bytes_can_be_reversed() {
 
 #[wasm_bindgen_test]
 pub fn u40_as_i40_can_be_reversed() {
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     let u40 = 560608505551;
     let i40 = u40_as_i40(u40);
 

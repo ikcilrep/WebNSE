@@ -81,6 +81,7 @@ pub fn cycle_right(data: &[u8], bits_to_shift: &BigUint, cycled_data: &mut Vec<i
 
 #[wasm_bindgen_test]
 fn cycle_left_can_be_reversed_with_cycle_right() {
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use std::str::FromStr;
     let bits_to_shift = BigUint::from_str("110192826829776194000614388426091705128").unwrap();
     let unsigned_data = [
@@ -178,6 +179,7 @@ fn cycle_left_can_be_reversed_with_cycle_right() {
 
 #[wasm_bindgen_test]
 fn cycle_right_can_be_reversed_with_cycle_left() {
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     use std::str::FromStr;
     let bits_to_shift = BigUint::from_str("110192826829776194000614388426091705128").unwrap();
     let raw_data = [

@@ -17,13 +17,14 @@ const ELEMENT_SIZE: usize = 5;
 
 pub const ENCRYPTED_BLOCK_SIZE: usize = ELEMENT_SIZE * BLOCK_SIZE + BLOCK_SIZE + SALT_SIZE;
 
-#[wasm_bindgen(module = "crypto")]
+#[wasm_bindgen]
 extern "C" {
-    fn randomBytes(size: u32) -> Uint8Array;
+    #[wasm_bindgen(js_namespace = ["window", "crypto"])]
+    fn getRandomValues(typedArray: Uint8Array) -> Uint8Array;
 }
 
 pub fn encrypt_block(block: &[i8], key: &BigUint, encrypted_block: &Uint8Array) {
-    let salt = randomBytes(SALT_SIZE as u32);
+    let salt = getRandomValues(Uint8Array::new_with_length(SALT_SIZE as u32));
     for i in 0..salt.length() {
         encrypted_block.set_index(i, salt.get_index(i));
     }
@@ -59,11 +60,7 @@ pub fn encrypt_block(block: &[i8], key: &BigUint, encrypted_block: &Uint8Array) 
     );
 }
 
-pub fn decrypt_block(
-    encrypted_block: &Uint8Array,
-    key: &BigUint,
-    decrypted_block: &mut [i8],
-) {
+pub fn decrypt_block(encrypted_block: &Uint8Array, key: &BigUint, decrypted_block: &mut [i8]) {
     let salt = encrypted_block.subarray(0, SALT_SIZE as u32);
 
     let mut derived_key = [0; BLOCK_SIZE];
@@ -112,8 +109,9 @@ pub fn decrypt_block(
 
 #[wasm_bindgen_test]
 pub fn encrypt_block_can_be_reversed() {
-    use std::str::FromStr;
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
 
+    use std::str::FromStr;
     let unsigned_block: [u8; BLOCK_SIZE] = [
         237, 252, 84, 64, 120, 86, 39, 29, 40, 209, 77, 44, 108, 122, 150, 132, 46, 92, 98, 25,
         173, 186, 243, 142, 77, 145, 76, 71, 245, 118, 52, 172, 221, 109, 180, 222, 235, 18, 182,

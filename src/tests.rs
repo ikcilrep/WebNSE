@@ -5,6 +5,7 @@ use wasm_bindgen_test::*;
 
 #[wasm_bindgen_test]
 fn encrypt_can_be_reversed_with_decrypt() {
+    wasm_bindgen_test::wasm_bindgen_test_configure!(run_in_browser);
     let raw_data = [
         237, 252, 84, 64, 120, 86, 39, 29, 40, 209, 77, 44, 108, 122, 150, 132, 46, 92, 98, 25,
         173, 186, 243, 142, 77, 145, 76, 71, 245, 118, 52, 172, 221, 109, 180, 222, 235, 18, 182,

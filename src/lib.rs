@@ -13,9 +13,10 @@ mod bit_cycling;
 mod blocks;
 mod tests;
 
-#[wasm_bindgen(module = "crypto")]
+#[wasm_bindgen]
 extern "C" {
-    fn randomBytes(size: u32) -> Uint8Array;
+    #[wasm_bindgen(js_namespace = ["window", "crypto"])]
+    fn getRandomValues(typedArray: Uint8Array) -> Uint8Array;
 }
 
 fn hash_number(number: &BigUint) -> BigUint {
@@ -37,7 +38,9 @@ pub fn encrypt(data: Uint8Array, key_bytes: Uint8Array) -> Uint8Array {
         padded_data[i as usize] = data.get_index(i);
     }
 
-    let padding_bytes = randomBytes(padded_data.len() as u32 - data.length());
+    let padding_bytes = getRandomValues(Uint8Array::new_with_length(
+        padded_data.len() as u32 - data.length(),
+    ));
 
     for i in 0..padding_bytes.length() {
         padded_data[i as usize + data.length() as usize] = padding_bytes.get_index(i);
